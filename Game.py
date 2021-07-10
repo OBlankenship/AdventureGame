@@ -3,18 +3,41 @@ import csv
 
 
 class Item:
-    def __init__(self, name, pickup, description, is_open, key):
+    def __init__(self, name, pickup, description, is_open, key, obj_type, gates):
         self._name = name
         self._pickup = pickup
         self._description = description
         self._is_open = is_open
         self._key = key
+        self._obj_type = obj_type
+        self._gates = gates
 
     def get_description(self):
-        return self._description
+        if self._is_open == "NO":
+            return self._description + " It is locked!"
+        else:
+            return self._description
 
     def can_pickup(self):
         return self._pickup
+
+    def get_key(self):
+        return self._key
+
+    def is_open(self):
+        return self._is_open
+
+    def set_description(self, description):
+        self._description = description
+
+    def set_open(self, is_open):
+        self._is_open = is_open
+
+    def get_obj_type(self):
+        return self._obj_type
+
+    def get_gates(self):
+        return self._gates
 
 
 class Room:
@@ -50,6 +73,9 @@ class Room:
 
     def add_item(self, item):
         self._items.append(item)
+
+    def set_direction(self, direction, room):
+        self._connections[direction] = room
 
 
 class Player:
@@ -161,6 +187,26 @@ def player_action():
         else:
             print("You don't see a " + next_word[1] + " here")
 
+    elif next_word[0].upper() == "OPEN":
+        item = next_word[1].upper()
+        if item in items:
+            if items[item].is_open() == "NO":
+                if items[item].get_key() in player.get_inventory():
+                    player.remove_inventory(items[item].get_key())
+                    items[item].set_open("YES")
+                    if items[item].get_obj_type() == "DOOR":
+                        set_direction = items[item].get_gates()[0]
+                        set_room = items[item].get_gates()[1]
+                        location.set_direction(set_direction, set_room)
+
+                else:
+                    print("You don't have the key that fits this!")
+            else:
+                print("It's already open!")
+
+        else:
+            print("You don't see a " + next_word[1] + " here")
+
     else:
         print("Invalid command!")
 
@@ -177,7 +223,9 @@ def generate_items(name):
                 description = row[3]
                 is_open = row[4]
                 key = row[5]
-                item_dict[item_name] = Item(item_name, pickup, description, is_open, key)
+                obj_type = row[6]
+                gates = row[7].split(" ")
+                item_dict[item_name] = Item(item_name, pickup, description, is_open, key, obj_type, gates)
         return item_dict
 
 

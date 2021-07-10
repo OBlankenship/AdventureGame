@@ -1,4 +1,4 @@
-﻿ROOM:,ITEM:,PICKUP:,DESCRIPTION:,IS OPEN,KEY:
-CELL,KEY,YES,A shiny golden key,YES,
-CELL,BED,NO,Upon closer inspection you find a key tucked under the bed,YES,
-CELL,DOOR,NO,A large metal door,NO,CELL_KEY
+﻿ROOM:,ITEM:,PICKUP:,DESCRIPTION:,IS OPEN,KEY:,OBJ_TYPE,GATES
+CELL,KEY,YES,A shiny golden key.,YES,,KEY,
+CELL,BED,NO,Upon closer inspection you find a key tucked under the bed.,YES,,FURNISHING,
+CELL,DOOR,NO,A large metal door.,NO,KEY,DOOR,NORTH DUNGEON
