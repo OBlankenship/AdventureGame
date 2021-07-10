@@ -17,6 +17,9 @@ class Room:
         else:
             return self._description2
 
+    def look_around(self):
+        print(self._description1)
+
     def get_name(self):
         return self._name
 
@@ -41,6 +44,9 @@ class Player:
 
     def get_location(self):
         return self._location
+
+    def get_inventory(self):
+        return self._inventory
 
     def set_location(self, location):
         self._location = location
@@ -72,45 +78,68 @@ def lookup_room(room):
             return entry
 
 
+def display_help():
+    print("HELP".center(80, '*'))
+    print("Recognized Verbs Include:\n"
+          "Go\n"
+          "Take\n"
+          "Look\n")
+
+def print_inventory():
+    inventory = player.get_inventory()
+    print("You currently have the following items:")
+    if len(inventory) == 0:
+        print("Nothing!")
+    for item in inventory:
+        print(item)
+
 def player_action():
     direction_list = ["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN"]
-    while player.get_health() > 0:
-        next_action = input("What do you do?: ")
-        next_word = next_action.split()
-        location = player.get_location()
-        items = location.get_items()
+    next_action = input("What do you do?: ")
+    next_word = next_action.split()
+    location = player.get_location()
+    items = location.get_items()
 
-        if len(next_word) == 1:
-            print("Invalid command!")
-        elif next_word[0].upper() == "GO":
-            direction = next_word[1].upper()
-            if direction in direction_list:
-                go(direction)
-            else:
-                print("Not a direction! Must go a cardinal direction or up/down.")
-
-        elif next_word[0].upper() == "LOOK":
-            if next_word[1].upper() == "AT" and len(next_word) > 2:
-                item = next_word[2].upper()
-            else:
-                item = next_word[1].upper()
-            if item in items:
-                print(items[item]["DESCRIPTION"])
-            else:
-                print("There is no " + item + " here!")
-
-        elif next_word[0].upper() == "TAKE":
-            item = next_word[1].upper()
-            if item in items and items[item]["PICKUP"] == "YES":
-                location.remove_item(item)
-                player.add_inventory(item)
-            elif item in items and items[item]["PICKUP"] == "NO":
-                print("You can't pick up the " + next_word[1] + "!")
-            else:
-                print("You don't see a " + next_word[1] + " here")
-
+    if len(next_word) == 0:
+        print("Invalid command!")
+    elif next_word[0].upper() == "HELP":
+        display_help()
+    elif next_word[0].upper() == "INVENTORY":
+        print_inventory()
+    elif len(next_word) == 1:
+        print("Invalid command!")
+    elif next_word[0].upper() == "GO":
+        direction = next_word[1].upper()
+        if direction in direction_list:
+            go(direction)
         else:
-            print("Invalid command!")
+            print("Not a direction! Must go a cardinal direction or up/down.")
+
+    elif next_word[0].upper() == "LOOK":
+        if next_word[1].upper() == "AROUND":
+            location.look_around()
+            return None
+        elif next_word[1].upper() == "AT" and len(next_word) > 2:
+            item = next_word[2].upper()
+        else:
+            item = next_word[1].upper()
+        if item in items:
+            print(items[item]["DESCRIPTION"])
+        else:
+            print("There is no " + item + " here!")
+
+    elif next_word[0].upper() == "TAKE":
+        item = next_word[1].upper()
+        if item in items and items[item]["PICKUP"] == "YES":
+            location.remove_item(item)
+            player.add_inventory(item)
+        elif item in items and items[item]["PICKUP"] == "NO":
+            print("You can't pick up the " + next_word[1] + "!")
+        else:
+            print("You don't see a " + next_word[1] + " here")
+
+    else:
+        print("Invalid command!")
 
 
 def game_init():
@@ -133,11 +162,11 @@ def game_init():
                    {},
                    {"NORTH": None, "EAST": None, "SOUTH": "cell", "WEST": None, "UP": None, "DOWN": None})
     room_list.append(dungeon)
-
     print("You are in a darkened cell. There is a door to the north, and a bed.")
     return room_list
 
 
 room_list = game_init()
 player = Player(lookup_room("cell"))
-player_action()
+while player.get_health() > 0:
+    player_action()
