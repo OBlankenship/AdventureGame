@@ -1,0 +1,3 @@
+﻿ROOM:,DESCRIPTION 1:,DESCRIPTION 2:,CONNECTIONS:
+CELL,you are in the cell where you awoke,you are in the cell where you awoke,DUNGEON None None None None None
+DUNGEON,"You are in a dungeon. There are cells to the south, east, and west. There is a metal door to the north.",You are in the dungeon.,None None CELL None None None

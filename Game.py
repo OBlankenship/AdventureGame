@@ -1,3 +1,22 @@
+from art import *
+import csv
+
+
+class Item:
+    def __init__(self, name, pickup, description, is_open, key):
+        self._name = name
+        self._pickup = pickup
+        self._description = description
+        self._is_open = is_open
+        self._key = key
+
+    def get_description(self):
+        return self._description
+
+    def can_pickup(self):
+        return self._pickup
+
+
 class Room:
     def __init__(self, name, description1, description2, items, connections):
         self._name = name
@@ -61,21 +80,19 @@ class Player:
         self._inventory.remove(item)
 
 
+def lookup_room(room):
+    return room_dict[room]
+
+
 def go(direction):
     current_location = player.get_location()
     connections = current_location.get_connections()
-    if connections[direction] is None:
+    if connections[direction] == "None":
         print("You can't go that way!")
     else:
         next_location = lookup_room(connections[direction])
         player.set_location(next_location)
         print(next_location.get_description())
-
-
-def lookup_room(room):
-    for entry in room_list:
-        if entry.get_name() == room:
-            return entry
 
 
 def display_help():
@@ -85,6 +102,7 @@ def display_help():
           "Take\n"
           "Look\n")
 
+
 def print_inventory():
     inventory = player.get_inventory()
     print("You currently have the following items:")
@@ -92,6 +110,7 @@ def print_inventory():
         print("Nothing!")
     for item in inventory:
         print(item)
+
 
 def player_action():
     direction_list = ["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN"]
@@ -102,12 +121,16 @@ def player_action():
 
     if len(next_word) == 0:
         print("Invalid command!")
+
     elif next_word[0].upper() == "HELP":
         display_help()
+
     elif next_word[0].upper() == "INVENTORY":
         print_inventory()
+
     elif len(next_word) == 1:
         print("Invalid command!")
+
     elif next_word[0].upper() == "GO":
         direction = next_word[1].upper()
         if direction in direction_list:
@@ -124,16 +147,16 @@ def player_action():
         else:
             item = next_word[1].upper()
         if item in items:
-            print(items[item]["DESCRIPTION"])
+            print(items[item].get_description())
         else:
             print("There is no " + item + " here!")
 
     elif next_word[0].upper() == "TAKE":
         item = next_word[1].upper()
-        if item in items and items[item]["PICKUP"] == "YES":
+        if item in items and items[item].can_pickup() == "YES":
             location.remove_item(item)
             player.add_inventory(item)
-        elif item in items and items[item]["PICKUP"] == "NO":
+        elif item in items and items[item].can_pickup() == "NO":
             print("You can't pick up the " + next_word[1] + "!")
         else:
             print("You don't see a " + next_word[1] + " here")
@@ -142,31 +165,53 @@ def player_action():
         print("Invalid command!")
 
 
+def generate_items(name):
+    with open("items.csv", "r") as data_file:
+        data = csv.reader(data_file, delimiter=",")
+        headers = next(data)[1:]
+        item_dict = {}
+        for row in data:
+            if row[0] == name:
+                item_name = row[1]
+                pickup = row[2]
+                description = row[3]
+                is_open = row[4]
+                key = row[5]
+                item_dict[item_name] = Item(item_name, pickup, description, is_open, key)
+        return item_dict
+
+
+def generate_rooms():
+    room_dict = {}
+    with open("rooms.csv", "r") as data_file:
+        data = csv.reader(data_file, delimiter=",")
+        headers = next(data)[1:]
+        for row in data:
+            name = row[0]
+            description1 = row[1]
+            description2 = row[2]
+            connections = row[3].split(" ")
+            connections_dict = {}
+            connections_dict["NORTH"] = connections[0]
+            connections_dict["EAST"] = connections[1]
+            connections_dict["SOUTH"] = connections[2]
+            connections_dict["WEST"] = connections[3]
+            connections_dict["UP"] = connections[4]
+            connections_dict["DOWN"] = connections[5]
+            items = generate_items(name)
+            room_dict[name] = Room(name, description1, description2, items, connections_dict)
+    return room_dict
+
+
 def game_init():
-    room_list = []
-
-    cell = Room("cell",
-                "You are in the cell where you awoke.",
-                "You are in the cell where you awoke.",
-                {"KEY":{"PICKUP": "YES", "DESCRIPTION":"A shiny golden key"},
-                 "BED":{"PICKUP": "NO", "DESCRIPTION":"Upon closer inspection you find a key tucked under the bed"},
-                 "DOOR": {"PICKUP": "NO", "DESCRIPTION": "A large metal door", "OPEN": "NO"}
-                 },
-                {"NORTH": "dungeon", "EAST": None, "SOUTH": None, "WEST": None, "UP": None, "DOWN": None})
-    room_list.append(cell)
-
-    dungeon = Room("dungeon",
-                   "You are in a dungeon. There are cells to the south, east, and west. There is a metal door "
-                   "to the north.",
-                   "You are in the dungeon.",
-                   {},
-                   {"NORTH": None, "EAST": None, "SOUTH": "cell", "WEST": None, "UP": None, "DOWN": None})
-    room_list.append(dungeon)
+    tprint("Welcome", "calgphy2")
+    aprint("sword")
     print("You are in a darkened cell. There is a door to the north, and a bed.")
-    return room_list
+    room_dict = generate_rooms()
+    return room_dict
 
 
-room_list = game_init()
-player = Player(lookup_room("cell"))
+room_dict = game_init()
+player = Player(room_dict["CELL"])
 while player.get_health() > 0:
     player_action()
